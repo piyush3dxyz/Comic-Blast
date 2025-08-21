@@ -41,8 +41,8 @@ async function generateImageWithReplicate(prompt: string): Promise<string> {
       version: '39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b',
       input: {
         prompt: prompt,
-        width: 700,
-        height: 980,
+        width: 704,
+        height: 984,
       },
     }),
   });
