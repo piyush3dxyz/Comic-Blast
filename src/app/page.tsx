@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState, useFormStatus } from 'react';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { generateImage } from '@/app/actions';
 import { Button } from '@/components/ui/button';
@@ -32,41 +33,45 @@ function SubmitButton() {
 function GenerationResult({ state }: { state: any }) {
     const { pending } = useFormStatus();
 
-    return (
-        <div className="w-full">
-            {pending && (
-                <Card>
-                    <CardHeader>
-                        <Skeleton className="h-6 w-1/2" />
-                        <Skeleton className="h-4 w-3/4" />
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <Skeleton className="aspect-square w-full rounded-lg" />
-                        <div className="space-y-2">
-                            <Skeleton className="h-4 w-1/4" />
-                            <Skeleton className="h-5 w-full" />
-                            <Skeleton className="h-5 w-4/5" />
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+    if (pending) {
+        return (
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-6 w-1/2" />
+                    <Skeleton className="h-4 w-3/4" />
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <Skeleton className="aspect-square w-full rounded-lg" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="h-5 w-full" />
+                        <Skeleton className="h-5 w-4/5" />
+                    </div>
+                </CardContent>
+            </Card>
+        )
+    }
 
-            {state.error && !pending && (
-                <Alert variant="destructive">
-                    <AlertTitle>Generation Failed</AlertTitle>
-                    <AlertDescription>{state.error}</AlertDescription>
-                </Alert>
-            )}
+    if (state.error) {
+        return (
+            <Alert variant="destructive">
+                <AlertTitle>Generation Failed</AlertTitle>
+                <AlertDescription>{state.error}</AlertDescription>
+            </Alert>
+        )
+    }
 
-            {state.data && !pending && (
-                <ImageDisplayCard
-                    imageUrl={state.data.imageUrl}
-                    enhancedPrompt={state.data.enhancedPrompt}
-                    hint={state.data.hint}
-                />
-            )}
-        </div>
-    );
+    if (state.data) {
+        return (
+            <ImageDisplayCard
+                imageUrl={state.data.imageUrl}
+                enhancedPrompt={state.data.enhancedPrompt}
+                hint={state.data.hint}
+            />
+        )
+    }
+
+    return null;
 }
 
 export default function Home() {
@@ -79,7 +84,7 @@ export default function Home() {
           <h1 className="text-4xl font-bold tracking-tight text-primary sm:text-5xl">ProximAI</h1>
           <p className="mt-4 text-lg text-muted-foreground">
             Transform your ideas into stunning visuals. Start with a simple concept, and let our AI create a detailed masterpiece for you.
-          p>
+          </p>
         </header>
         
         <form action={formAction} className="space-y-8">
