@@ -1,17 +1,21 @@
 'use server';
 
-import { enhancePrompt } from '@/ai/flows/enhance-prompt';
+import { generateComicPanels } from '@/ai/flows/generate-comic-flow';
 import { generateImage as generateImageFlow } from '@/ai/flows/generate-image-flow';
 import { z } from 'zod';
 
 const formSchema = z.object({
-  basicPrompt: z.string().min(3, 'Prompt must be at least 3 characters long.'),
+  story: z.string().min(10, 'Story must be at least 10 characters long.'),
 });
 
+type ComicPanel = {
+    imagePrompt: string;
+    text: string;
+    imageUrl?: string;
+};
+
 type GenerationResult = {
-  enhancedPrompt: string;
-  imageUrl: string;
-  hint: string;
+  panels: ComicPanel[];
 };
 
 type FormState = {
@@ -19,30 +23,40 @@ type FormState = {
   data?: GenerationResult;
 };
 
-export async function generateImage(prevState: FormState, formData: FormData): Promise<FormState> {
+export async function generateComic(prevState: FormState, formData: FormData): Promise<FormState> {
   const validatedFields = formSchema.safeParse({
-    basicPrompt: formData.get('basicPrompt'),
+    story: formData.get('story'),
   });
 
   if (!validatedFields.success) {
     return {
-      error: validatedFields.error.flatten().fieldErrors.basicPrompt?.join(', '),
+      error: validatedFields.error.flatten().fieldErrors.story?.join(', '),
     };
   }
   
-  const { basicPrompt } = validatedFields.data;
+  const { story } = validatedFields.data;
 
   try {
-    const { enhancedPrompt } = await enhancePrompt({ basicPrompt });
-    const { imageUrl } = await generateImageFlow({ prompt: enhancedPrompt });
+    const { panels } = await generateComicPanels({ story });
 
-    const hint = basicPrompt.split(' ').slice(0, 2).join(' ');
+    if (!panels || panels.length === 0) {
+        return { error: "The AI could not generate any comic panels from the story. Please try a different story." };
+    }
+    
+    // Generate an image for each panel in parallel
+    const imagePromises = panels.map(panel => 
+        generateImageFlow({ prompt: `${panel.imagePrompt}, comic book style` })
+    );
+    const imageResults = await Promise.all(imagePromises);
+
+    const populatedPanels = panels.map((panel, index) => ({
+        ...panel,
+        imageUrl: imageResults[index].imageUrl,
+    }));
 
     return {
       data: {
-        enhancedPrompt,
-        imageUrl,
-        hint,
+        panels: populatedPanels,
       },
     };
   } catch (e: any) {
