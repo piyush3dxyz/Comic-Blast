@@ -51,7 +51,7 @@ async function generateImageWithReplicate(prompt: string): Promise<string> {
   let prediction = await response.json();
 
   while (prediction.status !== 'succeeded' && prediction.status !== 'failed') {
-    await sleep(1000);
+    await sleep(1500); // Slightly increased polling delay
     const pollResponse = await fetch(prediction.urls.get, {
       headers: {
         Authorization: `Token ${REPLICATE_API_TOKEN}`,
