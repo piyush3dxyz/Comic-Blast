@@ -36,11 +36,14 @@ const prompt = ai.definePrompt({
   name: 'generateComicPanelsPrompt',
   input: {schema: GenerateComicPanelsInputSchema},
   output: {schema: GenerateComicPanelsOutputSchema},
-  prompt: `You are a comic book author. Your task is to take a story and break it down into a series of distinct panels.
-First, create a detailed "character sheet" for the main character(s) to ensure visual consistency. Describe their appearance, clothing, and key features.
+  prompt: `You are a comic book author. Your task is to take a story and break it down into a series of distinct panels with a consistent style.
+
+First, define a consistent art style for the entire comic. For example: "vibrant comic book art, cel-shaded, simple backgrounds".
+Second, create a detailed "character sheet" for any main characters to ensure visual consistency. Describe their appearance, clothing, and key features.
+
 Then, for each panel, you must provide two things:
-1. A detailed visual prompt for an AI image generator. This prompt MUST reference the character sheet to ensure consistency and MUST NOT contain any text, words, or letters. It should only describe the visual elements of the scene.
-2. The separate narration or dialogue for that panel.
+1.  A visual prompt for an AI image generator. This prompt MUST adhere to the defined art style and character sheets. Keep the scene simple, focusing only on the essential characters and action to maintain consistency. The prompt MUST NOT contain any text, words, or letters.
+2.  The separate narration or dialogue text for that panel.
 
 Create exactly {{{numPanels}}} panels.
 
