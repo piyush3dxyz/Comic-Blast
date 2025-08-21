@@ -1,6 +1,7 @@
 'use server';
 
 import { enhancePrompt } from '@/ai/flows/enhance-prompt';
+import { generateImage as generateImageFlow } from '@/ai/flows/generate-image-flow';
 import { z } from 'zod';
 
 const formSchema = z.object({
@@ -33,9 +34,8 @@ export async function generateImage(prevState: FormState, formData: FormData): P
 
   try {
     const { enhancedPrompt } = await enhancePrompt({ basicPrompt });
+    const { imageUrl } = await generateImageFlow({ prompt: enhancedPrompt });
 
-    // Simulate image generation by returning a placeholder
-    const imageUrl = 'https://placehold.co/1024x1024.png';
     const hint = basicPrompt.split(' ').slice(0, 2).join(' ');
 
     return {
@@ -45,8 +45,8 @@ export async function generateImage(prevState: FormState, formData: FormData): P
         hint,
       },
     };
-  } catch (e) {
+  } catch (e: any) {
     console.error(e);
-    return { error: 'An unexpected error occurred while enhancing the prompt. Please try again.' };
+    return { error: e.message || 'An unexpected error occurred. Please try again.' };
   }
 }
