@@ -24,7 +24,7 @@ export function ImageDisplayCard({ imageUrl, enhancedPrompt, hint }: ImageDispla
       });
     } catch (err) {
       toast({
-        variant: 'destructive',
+        variant: "destructive",
         title: 'Failed to copy',
         description: 'Could not copy URL to clipboard. Please try again.',
       });
@@ -48,7 +48,7 @@ export function ImageDisplayCard({ imageUrl, enhancedPrompt, hint }: ImageDispla
             height={1024}
             className="h-full w-full object-cover transition-transform hover:scale-105"
             data-ai-hint={hint}
-            priority
+            priority={true}
           />
         </div>
 
