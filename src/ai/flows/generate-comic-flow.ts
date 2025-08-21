@@ -13,7 +13,7 @@ import {z} from 'zod';
 
 const GenerateComicPanelsInputSchema = z.object({
   story: z.string().describe('The story to be turned into a comic book.'),
-  numPanels: z.number().min(1).max(4).describe('The number of comic panels to generate.'),
+  numPanels: z.number().min(1).max(25).describe('The number of comic panels to generate.'),
 });
 export type GenerateComicPanelsInput = z.infer<typeof GenerateComicPanelsInputSchema>;
 
@@ -37,8 +37,9 @@ const prompt = ai.definePrompt({
   input: {schema: GenerateComicPanelsInputSchema},
   output: {schema: GenerateComicPanelsOutputSchema},
   prompt: `You are a comic book author. Your task is to take a story and break it down into a series of distinct panels.
-For each panel, you must provide two things:
-1. A detailed visual prompt for an AI image generator to create the scene. This prompt MUST NOT contain any text, words, or letters. It should only describe the visual elements.
+First, create a detailed "character sheet" for the main character(s) to ensure visual consistency. Describe their appearance, clothing, and key features.
+Then, for each panel, you must provide two things:
+1. A detailed visual prompt for an AI image generator. This prompt MUST reference the character sheet to ensure consistency and MUST NOT contain any text, words, or letters. It should only describe the visual elements of the scene.
 2. The separate narration or dialogue for that panel.
 
 Create exactly {{{numPanels}}} panels.

@@ -35,10 +35,14 @@ function SubmitButton() {
   );
 }
 
-function GenerationResult({ state, numPanelsToGenerate }: { state: any, numPanelsToGenerate: number }) {
-    const { pending } = useFormStatus();
+function GenerationResult({ state, isPending, numPanelsToGenerate }: { state: any, isPending: boolean, numPanelsToGenerate: number }) {
     const [selectedPanels, setSelectedPanels] = useState<Set<number>>(new Set());
     const [isExporting, setIsExporting] = useState(false);
+
+    useEffect(() => {
+        // Clear selections when new results come in
+        setSelectedPanels(new Set());
+    },[state.data])
 
     const handlePanelSelection = (index: number, checked: boolean) => {
         const newSelection = new Set(selectedPanels);
@@ -83,12 +87,20 @@ function GenerationResult({ state, numPanelsToGenerate }: { state: any, numPanel
                 // Fit to width
                 finalWidth = pdfWidth;
                 finalHeight = pdfWidth / canvasRatio;
+
+                if (finalHeight > pdfHeight) {
+                    finalHeight = pdfHeight;
+                    finalWidth = pdfHeight * canvasRatio;
+                }
                 
                 let y = (pdfHeight - finalHeight) / 2;
                 if (y < 0) y = 0;
 
+                let x = (pdfWidth - finalWidth) / 2;
+                if (x < 0) x = 0;
 
-                doc.addImage(imgData, 'PNG', 0, y, finalWidth, finalHeight);
+
+                doc.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
             }
         }
         
@@ -96,7 +108,7 @@ function GenerationResult({ state, numPanelsToGenerate }: { state: any, numPanel
         setIsExporting(false);
     };
     
-    if (pending) {
+    if (isPending) {
         return (
             <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -182,27 +194,26 @@ export default function Home() {
   const [numPanels, setNumPanels] = useState(4);
   const [numPanelsToGenerate, setNumPanelsToGenerate] = useState(4);
   const formRef = useRef<HTMLFormElement>(null);
+  const [isPending, setIsPending] = useState(false);
 
 
-  const handleFormAction = (formData: FormData) => {
-    // Before calling the action, we capture the number of panels
-    // that are *about* to be generated.
+  const handleFormAction = async (formData: FormData) => {
     const panels = parseInt(formData.get('numPanels') as string, 10);
     setNumPanelsToGenerate(panels);
-    formAction(formData);
+    setIsPending(true);
+    await formAction(formData);
+    setIsPending(false);
   };
 
 
   useEffect(() => {
-    // Reset form fields if the submission was successful
-    if (state.data && !state.error) {
+    if (state.data && !state.error && !isPending) {
         if (formRef.current) {
             formRef.current.reset();
         }
-        // Also reset the controlled component state if you have any
         setNumPanels(4);
     }
-  }, [state]);
+  }, [state, isPending]);
 
 
   return (
@@ -233,7 +244,7 @@ export default function Home() {
                 <div className="space-y-4">
                     <Textarea
                         name="story"
-                        placeholder="e.g., A brave knight travels to a dark castle. In the throne room, he confronts a fearsome dragon."
+                        placeholder="e.g., A brave knight with a silver helmet and a blue cape travels to a dark castle. In the throne room, he confronts a fearsome red dragon."
                         className="min-h-[150px] resize-y"
                         required
                     />
@@ -245,10 +256,9 @@ export default function Home() {
                                     <SelectValue placeholder="Select number of panels" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="1">1</SelectItem>
-                                    <SelectItem value="2">2</SelectItem>
-                                    <SelectItem value="3">3</SelectItem>
-                                    <SelectItem value="4">4</SelectItem>
+                                    {[...Array(25)].map((_, i) => (
+                                        <SelectItem key={i+1} value={String(i+1)}>{i+1}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -260,7 +270,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <GenerationResult state={state} numPanelsToGenerate={numPanelsToGenerate} />
+            <GenerationResult state={state} isPending={isPending} numPanelsToGenerate={numPanelsToGenerate} />
         </form>
       </div>
     </main>

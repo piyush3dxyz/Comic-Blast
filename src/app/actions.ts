@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 const formSchema = z.object({
   story: z.string().min(10, 'Story must be at least 10 characters long.'),
-  numPanels: z.coerce.number().min(1).max(4),
+  numPanels: z.coerce.number().min(1).max(25),
 });
 
 type ComicPanel = {
