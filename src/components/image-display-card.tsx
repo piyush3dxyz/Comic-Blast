@@ -61,7 +61,7 @@ export function ImageDisplayCard({ imageUrl, enhancedPrompt, hint }: ImageDispla
       </CardContent>
       <CardFooter className="flex flex-col items-stretch gap-3 bg-card sm:flex-row sm:justify-end p-4">
         <Button asChild variant="outline">
-          <a href={imageUrl} download={`proximai-image.png`} target="_blank">
+          <a href={imageUrl} download={`proximai-image.png`} target="_blank" rel="noopener noreferrer">
             <Download className="mr-2" />
             Download
           </a>

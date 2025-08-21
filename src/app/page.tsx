@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState, useFormStatus } from 'react';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { generateImage } from '@/app/actions';
 import { Button } from '@/components/ui/button';
@@ -70,7 +70,7 @@ function GenerationResult({ state }: { state: any }) {
 }
 
 export default function Home() {
-  const [state, formAction] = useFormState(generateImage, {});
+  const [state, formAction] = useActionState(generateImage, {});
 
   return (
     <main className="container mx-auto flex min-h-screen flex-col items-center p-4 py-12 md:p-8">
@@ -79,7 +79,7 @@ export default function Home() {
           <h1 className="text-4xl font-bold tracking-tight text-primary sm:text-5xl">ProximAI</h1>
           <p className="mt-4 text-lg text-muted-foreground">
             Transform your ideas into stunning visuals. Start with a simple concept, and let our AI create a detailed masterpiece for you.
-          </p>
+          p>
         </header>
         
         <form action={formAction} className="space-y-8">
