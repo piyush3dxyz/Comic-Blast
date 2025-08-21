@@ -72,8 +72,11 @@
   }
   body {
     @apply bg-background text-foreground;
-    background-image: radial-gradient(hsl(var(--foreground)) 0.5px, transparent 0.5px);
+    background-image:
+      radial-gradient(circle at center, hsla(0, 0%, 0%, 0.5) 1px, transparent 1px),
+      radial-gradient(circle at center, hsla(0, 0%, 0%, 0.5) 1px, transparent 1px);
     background-size: 10px 10px;
+    background-position: 0 0, 5px 5px;
     background-color: hsl(var(--background));
   }
 }
@@ -99,4 +102,35 @@
         margin-left: -10px;
         margin-bottom: -20px;
     }
+}
+.zap-animation {
+  animation: zap 0.3s ease-out forwards;
+}
+
+@keyframes zap {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1) rotate(-2deg); }
+  100% { transform: scale(1); }
+}
+
+.loading-burst {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-burst-text {
+  animation: pop-in 0.5s infinite alternate ease-in-out;
+}
+
+@keyframes pop-in {
+  from {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1.1);
+    opacity: 1;
+  }
 }
