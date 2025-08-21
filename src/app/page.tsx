@@ -1,8 +1,8 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Sparkles, Loader2, BookImage } from 'lucide-react';
+import { Sparkles, Loader2, BookImage, Download } from 'lucide-react';
 import { generateComic } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,10 @@ import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -32,7 +36,52 @@ function SubmitButton() {
 
 function GenerationResult({ state }: { state: any }) {
     const { pending } = useFormStatus();
+    const [selectedPanels, setSelectedPanels] = useState<Set<number>>(new Set());
+    const [isExporting, setIsExporting] = useState(false);
 
+    const handlePanelSelection = (index: number, checked: boolean) => {
+        const newSelection = new Set(selectedPanels);
+        if (checked) {
+            newSelection.add(index);
+        } else {
+            newSelection.delete(index);
+        }
+        setSelectedPanels(newSelection);
+    };
+
+    const handleExportPdf = async () => {
+        if (selectedPanels.size === 0) {
+            alert("Please select at least one panel to export.");
+            return;
+        }
+        setIsExporting(true);
+        
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const sortedSelectedPanels = Array.from(selectedPanels).sort((a,b) => a - b);
+        
+        for (let i = 0; i < sortedSelectedPanels.length; i++) {
+            const panelIndex = sortedSelectedPanels[i];
+            const panelElement = document.getElementById(`comic-panel-${panelIndex}`);
+            if (panelElement) {
+                if (i > 0) {
+                    doc.addPage();
+                }
+                const canvas = await html2canvas(panelElement, {
+                    scale: 2,
+                    useCORS: true,
+                });
+                const imgData = canvas.toDataURL('image/png');
+                const imgProps = doc.getImageProperties(imgData);
+                const pdfWidth = doc.internal.pageSize.getWidth();
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            }
+        }
+        
+        doc.save('comic-ebook.pdf');
+        setIsExporting(false);
+    };
+    
     if (pending) {
         return (
             <div className="space-y-8">
@@ -61,26 +110,47 @@ function GenerationResult({ state }: { state: any }) {
     if (state.data?.panels) {
         return (
             <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-center">Your Comic Book</h2>
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <h2 className="text-2xl font-bold text-center">Your Comic Book</h2>
+                    <Button onClick={handleExportPdf} disabled={isExporting || selectedPanels.size === 0}>
+                        {isExporting ? (
+                             <Loader2 className="mr-2 animate-spin" />
+                        ) : (
+                             <Download className="mr-2" />
+                        )}
+                        Export Selected as PDF
+                    </Button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {state.data.panels.map((panel: any, index: number) => (
-                         <Card key={index} className="overflow-hidden animate-in fade-in-50 duration-500">
-                            <CardContent className="p-4 space-y-4">
-                                <div className="aspect-video w-full overflow-hidden rounded-md border shadow-lg">
-                                    <Image
-                                        src={panel.imageUrl}
-                                        alt={panel.imagePrompt}
-                                        width={512}
-                                        height={288}
-                                        className="h-full w-full object-cover transition-transform hover:scale-105"
-                                        priority={true}
-                                    />
-                                </div>
-                                <blockquote className="border-l-2 border-primary pl-4 italic text-foreground text-sm">
-                                    {panel.text}
-                                </blockquote>
-                            </CardContent>
-                         </Card>
+                         <div key={index} className="space-y-2 animate-in fade-in-50 duration-500">
+                             <Card id={`comic-panel-${index}`} className="overflow-hidden">
+                                <CardContent className="p-0 space-y-0 relative">
+                                    <div className="aspect-video w-full overflow-hidden">
+                                        <Image
+                                            src={panel.imageUrl}
+                                            alt={panel.imagePrompt}
+                                            width={512}
+                                            height={288}
+                                            className="h-full w-full object-cover"
+                                            priority={true}
+                                        />
+                                    </div>
+                                    <blockquote className="absolute bottom-0 left-0 right-0 bg-black/60 p-4 text-white text-sm backdrop-blur-sm border-t border-white/20">
+                                        {panel.text}
+                                    </blockquote>
+                                </CardContent>
+                             </Card>
+                            <div className="flex items-center space-x-2 px-1">
+                                <Checkbox 
+                                    id={`select-panel-${index}`}
+                                    onCheckedChange={(checked) => handlePanelSelection(index, !!checked)}
+                                />
+                                <Label htmlFor={`select-panel-${index}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    Select Panel {index + 1}
+                                </Label>
+                            </div>
+                         </div>
                     ))}
                 </div>
             </div>
