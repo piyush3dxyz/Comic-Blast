@@ -61,7 +61,7 @@ function GenerationResult({ state, isPending, numPanelsToGenerate }: { state: an
         }
         setIsExporting(true);
         
-        const doc = new jsPDF('l', 'mm', 'a4'); // 'l' for landscape
+        const doc = new jsPDF('p', 'mm', 'a4'); // 'p' for portrait
         const sortedSelectedPanels = Array.from(selectedPanels).sort((a,b) => a - b);
         
         for (let i = 0; i < sortedSelectedPanels.length; i++) {
@@ -69,7 +69,7 @@ function GenerationResult({ state, isPending, numPanelsToGenerate }: { state: an
             const panelElement = document.getElementById(`comic-panel-${panelIndex}`);
             if (panelElement) {
                 if (i > 0) {
-                    doc.addPage('l', 'mm', 'a4');
+                    doc.addPage('p', 'mm', 'a4');
                 }
                 const canvas = await html2canvas(panelElement, {
                     scale: 2,
@@ -84,11 +84,13 @@ function GenerationResult({ state, isPending, numPanelsToGenerate }: { state: an
                 const canvasRatio = canvasWidth / canvasHeight;
                 
                 let finalWidth, finalHeight;
-                // Fit to width
-                finalWidth = pdfWidth;
-                finalHeight = pdfWidth / canvasRatio;
 
-                if (finalHeight > pdfHeight) {
+                if (pdfWidth / canvasRatio <= pdfHeight) {
+                    // Fit to width
+                    finalWidth = pdfWidth;
+                    finalHeight = pdfWidth / canvasRatio;
+                } else {
+                    // Fit to height
                     finalHeight = pdfHeight;
                     finalWidth = pdfHeight * canvasRatio;
                 }
@@ -115,7 +117,7 @@ function GenerationResult({ state, isPending, numPanelsToGenerate }: { state: an
                     {[...Array(numPanelsToGenerate)].map((_, i) => (
                         <Card key={i}>
                             <CardContent className="p-4 space-y-4">
-                                 <Skeleton className="aspect-video w-full rounded-lg" />
+                                 <Skeleton className="aspect-[7/10] w-full rounded-lg" />
                                  <Skeleton className="h-5 w-full" />
                                  <Skeleton className="h-5 w-4/5" />
                             </CardContent>
@@ -154,12 +156,12 @@ function GenerationResult({ state, isPending, numPanelsToGenerate }: { state: an
                          <div key={index} className="space-y-2 animate-in fade-in-50 duration-500">
                              <Card id={`comic-panel-${index}`} className="overflow-hidden bg-card">
                                 <CardContent className="p-0 space-y-0 relative">
-                                    <div className="aspect-video w-full overflow-hidden">
+                                    <div className="aspect-[7/10] w-full overflow-hidden">
                                         <Image
                                             src={panel.imageUrl}
                                             alt={panel.imagePrompt}
-                                            width={512}
-                                            height={288}
+                                            width={700}
+                                            height={980}
                                             className="h-full w-full object-cover"
                                             priority={true}
                                         />

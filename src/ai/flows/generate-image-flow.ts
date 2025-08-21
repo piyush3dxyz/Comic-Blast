@@ -39,7 +39,11 @@ async function generateImageWithReplicate(prompt: string): Promise<string> {
     },
     body: JSON.stringify({
       version: '39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b',
-      input: { prompt: prompt },
+      input: {
+        prompt: prompt,
+        width: 700,
+        height: 980,
+      },
     }),
   });
 
