@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -56,7 +57,7 @@ function GenerationResult({ state }: { state: any }) {
         }
         setIsExporting(true);
         
-        const doc = new jsPDF('p', 'mm', 'a4');
+        const doc = new jsPDF('l', 'mm', 'a4'); // 'l' for landscape
         const sortedSelectedPanels = Array.from(selectedPanels).sort((a,b) => a - b);
         
         for (let i = 0; i < sortedSelectedPanels.length; i++) {
@@ -64,17 +65,31 @@ function GenerationResult({ state }: { state: any }) {
             const panelElement = document.getElementById(`comic-panel-${panelIndex}`);
             if (panelElement) {
                 if (i > 0) {
-                    doc.addPage();
+                    doc.addPage('l', 'mm', 'a4');
                 }
                 const canvas = await html2canvas(panelElement, {
                     scale: 2,
                     useCORS: true,
+                    backgroundColor: null, // Transparent background for canvas
                 });
                 const imgData = canvas.toDataURL('image/png');
-                const imgProps = doc.getImageProperties(imgData);
                 const pdfWidth = doc.internal.pageSize.getWidth();
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                const pdfHeight = doc.internal.pageSize.getHeight();
+                const canvasWidth = canvas.width;
+                const canvasHeight = canvas.height;
+                const canvasRatio = canvasWidth / canvasHeight;
+                const pdfRatio = pdfWidth / pdfHeight;
+
+                let finalWidth, finalHeight;
+                // Fit to width
+                finalWidth = pdfWidth;
+                finalHeight = pdfWidth / canvasRatio;
+                
+                let y = (pdfHeight - finalHeight) / 2;
+                if (y < 0) y = 0;
+
+
+                doc.addImage(imgData, 'PNG', 0, y, finalWidth, finalHeight);
             }
         }
         
@@ -124,7 +139,7 @@ function GenerationResult({ state }: { state: any }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {state.data.panels.map((panel: any, index: number) => (
                          <div key={index} className="space-y-2 animate-in fade-in-50 duration-500">
-                             <Card id={`comic-panel-${index}`} className="overflow-hidden">
+                             <Card id={`comic-panel-${index}`} className="overflow-hidden bg-card">
                                 <CardContent className="p-0 space-y-0 relative">
                                     <div className="aspect-video w-full overflow-hidden">
                                         <Image
@@ -197,6 +212,22 @@ export default function Home() {
                         required
                         key={state.data ? Date.now() : 'prompt-area'}
                     />
+                     <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="numPanels">Number of Panels</Label>
+                             <Select name="numPanels" defaultValue="4">
+                                <SelectTrigger id="numPanels">
+                                    <SelectValue placeholder="Select number of panels" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="1">1</SelectItem>
+                                    <SelectItem value="2">2</SelectItem>
+                                    <SelectItem value="3">3</SelectItem>
+                                    <SelectItem value="4">4</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
                     <div className="flex justify-end">
                         <SubmitButton />
                     </div>
