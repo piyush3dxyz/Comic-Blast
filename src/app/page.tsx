@@ -173,7 +173,7 @@ function GenerationResult({ state, isPending, numPanelsToGenerate }: { state: an
                                         />
                                     </div>
                                     <div className="p-8 md:p-12 flex flex-col justify-center bg-black">
-                                        <p className="text-xl md:text-2xl text-primary-foreground/90 leading-relaxed font-serif">
+                                        <p className="text-xl md:text-2xl text-foreground leading-relaxed font-serif">
                                             {panel.text}
                                         </p>
                                     </div>
@@ -201,7 +201,7 @@ function GenerationResult({ state, isPending, numPanelsToGenerate }: { state: an
 
 
 export default function Home() {
-  const [state, formAction, isPending] = useActionState(generateComic, { data: null, error: undefined });
+  const [state, formAction, isPending] = useActionState(generateComic, { data: undefined, error: undefined });
   const [numPanels, setNumPanels] = useState(4);
   const [numPanelsToGenerate, setNumPanelsToGenerate] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
