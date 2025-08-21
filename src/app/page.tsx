@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useState, useRef, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Sparkles, Loader2, BookImage, Download } from 'lucide-react';
 import { generateComic } from '@/app/actions';
@@ -35,7 +35,7 @@ function SubmitButton() {
   );
 }
 
-function GenerationResult({ state }: { state: any }) {
+function GenerationResult({ state, numPanelsToGenerate }: { state: any, numPanelsToGenerate: number }) {
     const { pending } = useFormStatus();
     const [selectedPanels, setSelectedPanels] = useState<Set<number>>(new Set());
     const [isExporting, setIsExporting] = useState(false);
@@ -78,8 +78,7 @@ function GenerationResult({ state }: { state: any }) {
                 const canvasWidth = canvas.width;
                 const canvasHeight = canvas.height;
                 const canvasRatio = canvasWidth / canvasHeight;
-                const pdfRatio = pdfWidth / pdfHeight;
-
+                
                 let finalWidth, finalHeight;
                 // Fit to width
                 finalWidth = pdfWidth;
@@ -99,16 +98,18 @@ function GenerationResult({ state }: { state: any }) {
     
     if (pending) {
         return (
-            <div className="space-y-8">
-                {[...Array(3)].map((_, i) => (
-                    <Card key={i}>
-                        <CardContent className="p-4">
-                             <Skeleton className="aspect-video w-full rounded-lg" />
-                             <Skeleton className="h-5 mt-4 w-full" />
-                             <Skeleton className="h-5 mt-2 w-4/5" />
-                        </CardContent>
-                    </Card>
-                ))}
+            <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {[...Array(numPanelsToGenerate)].map((_, i) => (
+                        <Card key={i}>
+                            <CardContent className="p-4 space-y-4">
+                                 <Skeleton className="aspect-video w-full rounded-lg" />
+                                 <Skeleton className="h-5 w-full" />
+                                 <Skeleton className="h-5 w-4/5" />
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
             </div>
         )
     }
@@ -178,6 +179,31 @@ function GenerationResult({ state }: { state: any }) {
 
 export default function Home() {
   const [state, formAction] = useActionState(generateComic, {});
+  const [numPanels, setNumPanels] = useState(4);
+  const [numPanelsToGenerate, setNumPanelsToGenerate] = useState(4);
+  const formRef = useRef<HTMLFormElement>(null);
+
+
+  const handleFormAction = (formData: FormData) => {
+    // Before calling the action, we capture the number of panels
+    // that are *about* to be generated.
+    const panels = parseInt(formData.get('numPanels') as string, 10);
+    setNumPanelsToGenerate(panels);
+    formAction(formData);
+  };
+
+
+  useEffect(() => {
+    // Reset form fields if the submission was successful
+    if (state.data && !state.error) {
+        if (formRef.current) {
+            formRef.current.reset();
+        }
+        // Also reset the controlled component state if you have any
+        setNumPanels(4);
+    }
+  }, [state]);
+
 
   return (
     <main className="container mx-auto flex min-h-screen flex-col items-center p-4 py-12 md:p-8">
@@ -192,7 +218,7 @@ export default function Home() {
           </p>
         </header>
         
-        <form action={formAction} className="space-y-8">
+        <form ref={formRef} action={handleFormAction} className="space-y-8" key={state.data ? Date.now() : 'form'}>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -210,12 +236,11 @@ export default function Home() {
                         placeholder="e.g., A brave knight travels to a dark castle. In the throne room, he confronts a fearsome dragon."
                         className="min-h-[150px] resize-y"
                         required
-                        key={state.data ? Date.now() : 'prompt-area'}
                     />
                      <div className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="numPanels">Number of Panels</Label>
-                             <Select name="numPanels" defaultValue="4">
+                             <Select name="numPanels" value={String(numPanels)} onValueChange={(val) => setNumPanels(parseInt(val))}>
                                 <SelectTrigger id="numPanels">
                                     <SelectValue placeholder="Select number of panels" />
                                 </SelectTrigger>
@@ -235,7 +260,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <GenerationResult state={state} />
+            <GenerationResult state={state} numPanelsToGenerate={numPanelsToGenerate} />
         </form>
       </div>
     </main>
