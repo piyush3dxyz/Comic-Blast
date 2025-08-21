@@ -16,8 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-function SubmitButton() {
-  const [state, formAction, isPending] = useActionState(generateComic, {});
+function SubmitButton({ isPending }: { isPending: boolean }) {
   return (
     <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
       {isPending ? (
@@ -82,7 +81,7 @@ function GenerationResult({ state, isPending, numPanelsToGenerate }: { state: an
                 const canvas = await html2canvas(panelElement, {
                     scale: 2,
                     useCORS: true,
-                    backgroundColor: null,
+                    backgroundColor: null, 
                 });
                 const imgData = canvas.toDataURL('image/png');
                 const pdfWidth = doc.internal.pageSize.getWidth();
@@ -161,25 +160,25 @@ function GenerationResult({ state, isPending, numPanelsToGenerate }: { state: an
                 <div className="space-y-8">
                     {state.data.panels.map((panel: any, index: number) => (
                          <div key={index} className="space-y-2 animate-in fade-in-50 duration-500">
-                             <Card id={`comic-panel-${index}`} className="overflow-hidden bg-card">
-                                <div className="grid md:grid-cols-2 items-center">
-                                    <div className="p-4 bg-black flex items-center justify-center aspect-[7/10] md:aspect-auto md:h-full">
+                            <Card id={`comic-panel-${index}`} className="overflow-hidden bg-black border-2 border-primary/20 shadow-lg shadow-primary/10">
+                                <div className="grid md:grid-cols-2 items-stretch">
+                                    <div className="p-4 bg-black flex items-center justify-center">
                                         <Image
                                             src={panel.imageUrl}
                                             alt={panel.imagePrompt}
                                             width={704}
                                             height={984}
-                                            className="object-contain w-full h-full"
+                                            className="object-contain w-full h-full rounded-md shadow-2xl shadow-black"
                                             priority={true}
                                         />
                                     </div>
-                                    <div className="p-6 md:p-10 flex flex-col justify-center">
-                                         <p className="text-base md:text-lg text-foreground/90 leading-relaxed font-serif">
-                                             {panel.text}
-                                         </p>
+                                    <div className="p-8 md:p-12 flex flex-col justify-center bg-black">
+                                        <p className="text-xl md:text-2xl text-primary-foreground/90 leading-relaxed font-serif">
+                                            {panel.text}
+                                        </p>
                                     </div>
                                 </div>
-                             </Card>
+                            </Card>
                             <div className="flex items-center space-x-2 px-1">
                                 <Checkbox 
                                     id={`select-panel-${index}`}
@@ -202,19 +201,17 @@ function GenerationResult({ state, isPending, numPanelsToGenerate }: { state: an
 
 
 export default function Home() {
-  const [state, formAction, isPending] = useActionState(generateComic, {});
+  const [state, formAction, isPending] = useActionState(generateComic, { data: null, error: undefined });
   const [numPanels, setNumPanels] = useState(4);
-  const [numPanelsToGenerate, setNumPanelsToGenerate] = useState(4);
+  const [numPanelsToGenerate, setNumPanelsToGenerate] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
-
 
   const handleFormAction = (formData: FormData) => {
     const panels = parseInt(formData.get('numPanels') as string, 10);
     setNumPanelsToGenerate(panels);
     formAction(formData);
   };
-
-
+  
   useEffect(() => {
     if (state.data && !state.error && !isPending) {
         if (formRef.current) {
@@ -223,7 +220,6 @@ export default function Home() {
         setNumPanels(4);
     }
   }, [state, isPending]);
-
 
   return (
     <main className="container mx-auto flex min-h-screen flex-col items-center p-4 py-12 md:p-8">
@@ -273,7 +269,7 @@ export default function Home() {
                             </Select>
                         </div>
                         <div className="flex justify-end">
-                            <SubmitButton />
+                            <SubmitButton isPending={isPending} />
                         </div>
                     </div>
                 </div>
