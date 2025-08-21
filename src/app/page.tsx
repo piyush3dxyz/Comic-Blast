@@ -175,7 +175,7 @@ function GenerationResult({ state, isPending, numPanelsToGenerate }: { state: an
                     {state.data.panels.map((panel: any, index: number) => (
                          <div key={index} className="space-y-4 animate-in fade-in-50 duration-500">
                              <div id={`comic-panel-${index}`} className="bg-black border-4 border-black p-4 transform -rotate-2 hover:rotate-0 transition-transform duration-300">
-                                <div className="bg-white p-2">
+                                <div className="bg-white p-2 relative">
                                      <Image
                                         src={panel.imageUrl}
                                         alt={panel.imagePrompt}
@@ -184,6 +184,13 @@ function GenerationResult({ state, isPending, numPanelsToGenerate }: { state: an
                                         className="object-contain w-full h-full shadow-2xl shadow-black"
                                         priority={index < 2}
                                     />
+                                    {panel.text && (
+                                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 p-2 cursor-move speech-bubble-handle w-11/12">
+                                            <div className="relative bg-white/90 backdrop-blur-sm text-black px-4 py-2 rounded-xl shadow-lg speech-bubble max-w-full">
+                                                <p className="text-center font-bold text-lg">{panel.text}</p>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             <div className="flex items-center space-x-2 px-1 justify-end">
@@ -213,7 +220,7 @@ export default function Home() {
   const [numPanels, setNumPanels] = useState(4);
   const [numPanelsToGenerate, setNumPanelsToGenerate] = useState(0);
 
-  const handleFormAction = (formData: FormData) => {
+  const handleFormSubmit = (formData: FormData) => {
     const panels = parseInt(formData.get('numPanels') as string, 10);
     setNumPanelsToGenerate(panels);
     formAction(formData);
@@ -234,7 +241,7 @@ export default function Home() {
           </p>
         </header>
         
-        <form action={handleFormAction} className="space-y-8" key={state.data ? Date.now() : 'form'}>
+        <form onSubmit={(e) => { e.preventDefault(); handleFormSubmit(new FormData(e.currentTarget)); }} className="space-y-8" key={state.data ? Date.now() : 'form'}>
             <Card className="!bg-transparent !border-none !shadow-none">
               <CardContent className="!p-0">
                 <div className="space-y-6 bg-secondary p-6 border-4 border-black rounded-lg shadow-[8px_8px_0px_rgba(0,0,0,0.5)]">
